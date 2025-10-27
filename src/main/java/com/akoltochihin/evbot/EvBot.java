@@ -24,12 +24,12 @@ public class EvBot implements LongPollingSingleThreadUpdateConsumer {
     private static final Logger logger = LoggerFactory.getLogger(EvBot.class);
 
     private final TelegramClient telegramClient;
-    private final MalankaClient malankaClient;
+    private final MalankaService malankaService;
     private final Map<Long, ExecutorService> executors;
 
     public EvBot(String botToken) {
         telegramClient = new OkHttpTelegramClient(botToken);
-        malankaClient = new MalankaClient();
+        malankaService = new MalankaService();
         executors = new ConcurrentHashMap<>();
     }
 
@@ -90,7 +90,7 @@ public class EvBot implements LongPollingSingleThreadUpdateConsumer {
         executors.put(chatId, executor);
         executor.scheduleWithFixedDelay(() -> {
 //            var status = MockApi.getStatus();
-            var status = malankaClient.getConnectorStatus("ed83e8c4-bbed-4e23-81df-454830472f35");
+            var status = malankaService.getConnectorStatus("ed83e8c4-bbed-4e23-81df-454830472f35");
             if ("Available".equals(status)) {
                 sendMessage(chatId, Responses.AVAILABLE);
                 executor.shutdown();

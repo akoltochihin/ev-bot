@@ -9,7 +9,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.stream.StreamSupport;
 
-public class MalankaClient {
+public class MalankaService {
 
     private static final String MALANKA_URI =
             "https://apigateway.malankabn.by/central-system/api/v1/locations/map/info?locationId=8d36c69b-92b9-471a-a5e1-53064e744028";
