@@ -15,7 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.akoltochihin.evbot.Commands.START_POLLING;
+import static com.akoltochihin.evbot.Commands.START_POLLING_RODINA;
+import static com.akoltochihin.evbot.Commands.START_POLLING_YAKUBOVSKOGO;
 import static com.akoltochihin.evbot.Commands.STOP_POLLING;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -64,7 +65,8 @@ public class EvBot implements LongPollingSingleThreadUpdateConsumer {
 
     private String handleCommand(String command, Long chatId) {
         return switch (command.toLowerCase()) {
-            case START_POLLING -> startPolling(chatId);
+            case START_POLLING_RODINA -> startPolling(chatId, Chargers.RODINA_CINEMA);
+            case START_POLLING_YAKUBOVSKOGO -> startPolling(chatId, Chargers.YAKUBOVSKOGO);
             case STOP_POLLING -> stopPolling(chatId);
             default -> Responses.MENU;
         };
@@ -81,22 +83,28 @@ public class EvBot implements LongPollingSingleThreadUpdateConsumer {
         return Responses.POLLING_STOPPED;
     }
 
-    private String startPolling(Long chatId) {
+    private String startPolling(Long chatId, Chargers charger) {
         if (executors.containsKey(chatId)) {
             return Responses.POLLING_ERROR_ALREADY_STARTED;
+        }
+
+//        var startStatus = MockApi.getStatus();
+        var startStatus = malankaService.getChargerStatus(charger);
+        if ("Available".equals(startStatus)) {
+            return Responses.AVAILABLE;
         }
 
         var executor = Executors.newScheduledThreadPool(1);
         executors.put(chatId, executor);
         executor.scheduleWithFixedDelay(() -> {
 //            var status = MockApi.getStatus();
-            var status = malankaService.getConnectorStatus("ed83e8c4-bbed-4e23-81df-454830472f35");
+            var status = malankaService.getChargerStatus(charger);
             if ("Available".equals(status)) {
                 sendMessage(chatId, Responses.AVAILABLE);
                 executor.shutdown();
                 executors.remove(chatId);
             }
         }, 0, 1, MINUTES);
-        return null;
+        return Responses.POLLING_STARTED + startStatus;
     }
 }
